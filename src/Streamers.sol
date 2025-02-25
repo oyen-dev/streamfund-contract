@@ -7,72 +7,40 @@ import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableM
 contract Streamers {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    struct TokenSupport {
-        address token;
-        uint256 total;
-    }
-
-    struct Streamer {
-        address streamer;
-        TokenSupport[] cumulative;
-    }
-
-    uint256 public streamerCount;
-    address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    Streamer[] internal registeredStreamers;
+    uint256 private streamerCount;
+    mapping(address streamer => mapping(address token => uint256)) private tokenSupport;
     EnumerableMap.AddressToUintMap private streamers;
 
     error StreamerValidationError(string message);
 
     event StreamerAdded(address indexed streamer);
 
-    function register() public {
-        if (streamers.contains(msg.sender)) {
-            revert StreamerValidationError("Streamer already registered");
+    function getStreamerSupport(address streamer, address token) public view returns (address, uint256) {
+        if (_isStreamerExists(streamer)) {
+            return (streamer, tokenSupport[streamer][token]);
         }
-
-        streamers.set(msg.sender, streamerCount);
-        registeredStreamers.push();
-        registeredStreamers[streamerCount].streamer = msg.sender;
-        streamerCount += 1;
-        _addTokenSupport(msg.sender, ETH, 0);
-
-        emit StreamerAdded(msg.sender);
+        return (address(0), 0);
     }
 
-    function getStreamer(address streamer) public view returns (address, TokenSupport[] memory) {
-        if (_isStreamerExists(streamer)) {
-            uint256 index = _getStreamerIndex(streamer);
-            Streamer memory details = registeredStreamers[index];
-            return (streamer, details.cumulative);
-        }
-        return (address(0), new TokenSupport[](0));
+    function getStreamerCount() public view returns (uint256) {
+        return streamerCount;
     }
 
     function _addTokenSupport(address streamer, address token, uint256 amount) internal {
         if (!_isStreamerExists(streamer)) {
-            revert StreamerValidationError("Streamer not registered");
+            _addStreamer(streamer);
         }
-        uint256 index = _getStreamerIndex(streamer);
+        tokenSupport[streamer][token] += amount;
+    }
 
-        for (uint256 i = 0; i < registeredStreamers[index].cumulative.length;) {
-            if (registeredStreamers[index].cumulative[i].token == token) {
-                registeredStreamers[index].cumulative[i].total += amount;
-                return;
-            }
-            unchecked {
-                i++;
-            }
-        }
-        TokenSupport memory newToken = TokenSupport(token, amount);
-        registeredStreamers[index].cumulative.push(newToken);
+    function _addStreamer(address streamer) internal {
+        streamers.set(streamer, streamerCount);
+        streamerCount++;
+
+        emit StreamerAdded(streamer);
     }
 
     function _isStreamerExists(address streamer) internal view returns (bool) {
         return streamers.contains(streamer);
-    }
-
-    function _getStreamerIndex(address streamer) internal view returns (uint256) {
-        return streamers.get(streamer);
     }
 }

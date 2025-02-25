@@ -13,9 +13,10 @@ contract StreamFund is AccessControl, Tokens, Streamers {
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
     uint256 private constant CHAIN_ID = 84_532;
-    uint256 private constant fees = 100; // 1%
+    uint256 private constant MAX_MESSAGE_LENGTH = 200;
+    uint256 private constant FEES = 100; // 1%
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address public feeCollector;
+    address private feeCollector;
 
     constructor(address _feeCollector) {
         feeCollector = _feeCollector;
@@ -32,17 +33,14 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         if (msg.value == 0) {
             revert StreamFundValidationError("ETH amount cannot be zero");
         }
-        if (!_isStreamerExists(streamer)) {
-            revert StreamFundValidationError("Streamer not registered");
-        }
-        if (bytes(message).length > 150) {
+        if (bytes(message).length > MAX_MESSAGE_LENGTH) {
             revert StreamFundValidationError("Message length exceeded");
         }
         if (block.chainid != CHAIN_ID) {
             revert StreamFundValidationError("Invalid chain ID");
         }
 
-        uint256 fee = (msg.value * fees) / 10_000;
+        uint256 fee = (msg.value * FEES) / 10_000;
         uint256 amount = msg.value - fee;
         payable(feeCollector).transfer(fee);
         payable(streamer).transfer(amount);
@@ -60,7 +58,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         if (!_isTokenAvailable(token)) {
             revert StreamFundValidationError("Token not allowed");
         }
-        if (bytes(message).length > 150) {
+        if (bytes(message).length > MAX_MESSAGE_LENGTH) {
             revert StreamFundValidationError("Message length exceeded");
         }
         if (block.chainid != CHAIN_ID) {
@@ -72,7 +70,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
             revert StreamFundValidationError("Insufficient allowance");
         }
 
-        uint256 fee = (amount * fees) / 10_000;
+        uint256 fee = (amount * FEES) / 10_000;
         uint256 netAmount = amount - fee;
         IERC20(token).safeTransferFrom(msg.sender, feeCollector, fee);
         IERC20(token).safeTransferFrom(msg.sender, streamer, netAmount);
@@ -81,7 +79,11 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         emit SupportReceived(streamer, msg.sender, token, CHAIN_ID, message);
     }
 
-    function changeFeeCollector(address newCollector) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function getFeeCollector() external view returns (address) {
+        return feeCollector;
+    }
+
+    function setFeeCollector(address newCollector) external onlyRole(DEFAULT_ADMIN_ROLE) {
         feeCollector = newCollector;
 
         emit FeeCollectorChanged(newCollector);
