@@ -7,6 +7,7 @@ import { Streamers } from "./Streamers.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { SafeTransferLib } from "lib/solady/src/utils/SafeTransferLib.sol";
 
 contract StreamFund is AccessControl, Tokens, Streamers {
     using SafeERC20 for IERC20;
@@ -26,7 +27,9 @@ contract StreamFund is AccessControl, Tokens, Streamers {
 
     error StreamFundValidationError(string message);
 
-    event SupportReceived(address indexed streamer, address indexed from, address token, uint256 chain, string message);
+    event SupportReceived(
+        address indexed streamer, address indexed from, address token, uint256 amount, uint256 chain, string message
+    );
     event FeeCollectorChanged(address indexed newCollector);
 
     function supportWithETH(address streamer, string memory message) external payable {
@@ -42,18 +45,16 @@ contract StreamFund is AccessControl, Tokens, Streamers {
 
         uint256 fee = (msg.value * FEES) / 10_000;
         uint256 amount = msg.value - fee;
-        payable(feeCollector).transfer(fee);
-        payable(streamer).transfer(amount);
+        SafeTransferLib.safeTransferETH(feeCollector, fee);
+        SafeTransferLib.safeTransferETH(streamer, amount);
+
         _addTokenSupport(streamer, ETH, amount);
-        emit SupportReceived(streamer, msg.sender, ETH, CHAIN_ID, message);
+        emit SupportReceived(streamer, msg.sender, ETH, msg.value, CHAIN_ID, message);
     }
 
     function supportWithToken(address streamer, address token, uint256 amount, string memory message) external {
         if (amount == 0) {
             revert StreamFundValidationError("Token amount cannot be zero");
-        }
-        if (!_isStreamerExists(streamer)) {
-            revert StreamFundValidationError("Streamer not registered");
         }
         if (!_isTokenAvailable(token)) {
             revert StreamFundValidationError("Token not allowed");
@@ -76,7 +77,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         IERC20(token).safeTransferFrom(msg.sender, streamer, netAmount);
         _addTokenSupport(streamer, token, netAmount);
 
-        emit SupportReceived(streamer, msg.sender, token, CHAIN_ID, message);
+        emit SupportReceived(streamer, msg.sender, token, amount, CHAIN_ID, message);
     }
 
     function getFeeCollector() external view returns (address) {

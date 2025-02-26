@@ -13,29 +13,33 @@ contract TokensTest is Test {
         tokens = new Tokens();
     }
 
-    function testFailAddAllowedTokenZeroAddress() public {
-        vm.expectRevert("Token address cannot be zero");
+    function testAddAllowedTokenZeroAddress() public {
+        vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token address cannot be zero"));
         tokens.addAllowedToken(address(0), 6, "USDT", "Tether USD");
     }
 
-    function testFailAddAllowedTokenZeroDecimals() public {
-        vm.expectRevert("Token decimals cannot be zero");
+    function testAddAllowedTokenZeroDecimals() public {
+        vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token decimals cannot be zero"));
         tokens.addAllowedToken(address(1), 0, "USDT", "Tether USD");
     }
 
-    function testFailAddAllowedTokenEmptySymbol() public {
-        vm.expectRevert("Token symbol or name cannot be empty");
+    function testAddAllowedTokenEmptySymbol() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token symbol or name cannot be empty")
+        );
         tokens.addAllowedToken(address(1), 6, "", "Tether USD");
     }
 
-    function testFailAddAllowedTokenEmptyName() public {
-        vm.expectRevert("Token symbol or name cannot be empty");
+    function testAddAllowedTokenEmptyName() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token symbol or name cannot be empty")
+        );
         tokens.addAllowedToken(address(1), 6, "USDT", "");
     }
 
-    function testFailAddAllowedTokenAlreadyExists() public {
+    function testAddAllowedTokenAlreadyExists() public {
         tokens.addAllowedToken(address(1), 6, "USDT", "Tether USD");
-        vm.expectRevert("Token already exists");
+        vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token already exists"));
         tokens.addAllowedToken(address(1), 6, "USDT", "Tether USD");
     }
 
@@ -48,13 +52,13 @@ contract TokensTest is Test {
         tokens.addAllowedToken(address(1), decimals, symbol, name);
     }
 
-    function testFailRemoveAllowedTokenZeroAddress() public {
-        vm.expectRevert("Token address cannot be zero");
+    function testRemoveAllowedTokenZeroAddress() public {
+        vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token address cannot be zero"));
         tokens.removeAllowedToken(address(0));
     }
 
-    function testFailRemoveAllowedTokenDoesNotExist() public {
-        vm.expectRevert("Token does not exist");
+    function testRemoveAllowedTokenDoesNotExist() public {
+        vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token does not exist"));
         tokens.removeAllowedToken(address(1));
     }
 
