@@ -14,8 +14,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
     uint256 private constant CHAIN_ID = 84_532;
-    uint256 private constant MAX_MESSAGE_LENGTH = 200;
-    uint256 private constant FEES = 100; // 1%
+    uint256 private constant FEES = 250; // 2.5%
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address private feeCollector;
 
@@ -28,16 +27,13 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     error StreamFundValidationError(string message);
 
     event SupportReceived(
-        address indexed streamer, address indexed from, address token, uint256 amount, uint256 chain, string message
+        address indexed streamer, address indexed from, address indexed token, uint256 amount, uint256 chain, bytes data
     );
     event FeeCollectorChanged(address indexed newCollector);
 
-    function supportWithETH(address streamer, string memory message) external payable {
+    function supportWithETH(address streamer, bytes memory data) external payable {
         if (msg.value == 0) {
             revert StreamFundValidationError("ETH amount cannot be zero");
-        }
-        if (bytes(message).length > MAX_MESSAGE_LENGTH) {
-            revert StreamFundValidationError("Message length exceeded");
         }
         if (block.chainid != CHAIN_ID) {
             revert StreamFundValidationError("Invalid chain ID");
@@ -49,18 +45,15 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         SafeTransferLib.safeTransferETH(streamer, amount);
 
         _addTokenSupport(streamer, ETH, amount);
-        emit SupportReceived(streamer, msg.sender, ETH, msg.value, CHAIN_ID, message);
+        emit SupportReceived(streamer, msg.sender, ETH, msg.value, CHAIN_ID, data);
     }
 
-    function supportWithToken(address streamer, address token, uint256 amount, string memory message) external {
+    function supportWithToken(address streamer, address token, uint256 amount, bytes memory data) external {
         if (amount == 0) {
             revert StreamFundValidationError("Token amount cannot be zero");
         }
         if (!_isTokenAvailable(token)) {
             revert StreamFundValidationError("Token not allowed");
-        }
-        if (bytes(message).length > MAX_MESSAGE_LENGTH) {
-            revert StreamFundValidationError("Message length exceeded");
         }
         if (block.chainid != CHAIN_ID) {
             revert StreamFundValidationError("Invalid chain ID");
@@ -77,7 +70,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         IERC20(token).safeTransferFrom(msg.sender, streamer, netAmount);
         _addTokenSupport(streamer, token, netAmount);
 
-        emit SupportReceived(streamer, msg.sender, token, amount, CHAIN_ID, message);
+        emit SupportReceived(streamer, msg.sender, token, amount, CHAIN_ID, data);
     }
 
     function getFeeCollector() external view returns (address) {

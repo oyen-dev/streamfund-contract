@@ -7,14 +7,29 @@ import { StreamFund } from "../src/StreamFund.sol";
 import { ERC20Mock } from "../src/ERC20Mock.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
+contract EncoderDecoder {
+    function encodePayload(string memory payload) public pure returns (bytes memory) {
+        return abi.encode(payload);
+    }
+
+    function decodePayload(bytes memory encoded) public pure returns (string memory) {
+        (string memory payload) = abi.decode(encoded, (string));
+        return payload;
+    }
+}
+
 contract StreamFundTest is Test {
+    EncoderDecoder encoderDecoder;
     StreamFund streamFund;
     ERC20Mock usdt;
     ERC20Mock token;
-    address private constant ADMIN = address(0x1);
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    uint256 public constant CHAIN_ID = 84_532;
+    uint256 public constant FEE = 250; // 2.5%
+    address private constant ADMIN = address(0x1);
 
     function setUp() public {
+        encoderDecoder = new EncoderDecoder();
         streamFund = new StreamFund(ADMIN);
         usdt = new ERC20Mock(ADMIN, "Tether USD", "USDT", 10_000_000);
         token = new ERC20Mock(ADMIN, "Test Token", "TEST", 10_000_000);
@@ -26,19 +41,6 @@ contract StreamFundTest is Test {
         );
 
         streamFund.supportWithETH(address(0), "Hello");
-    }
-
-    function testSupportMessageLengthExceeded() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Message length exceeded")
-        );
-
-        vm.startPrank(address(2));
-        vm.deal(address(2), 10 ether);
-        streamFund.supportWithETH{ value: 1 ether }(
-            address(0),
-            "Hello, this is a very long message that exceeds the limit of 150 characters Hello, this is a very long message that exceeds the limit of 150 characterHello, this is a very long message that exceeds the"
-        );
     }
 
     function testSupportInvalidChainID() public {
@@ -53,9 +55,13 @@ contract StreamFundTest is Test {
         vm.chainId(84_532);
         vm.startPrank(address(2));
         vm.deal(address(2), 10 ether);
-        streamFund.supportWithETH{ value: 1 ether }(address(3), "Hello");
-        assertEq(address(ADMIN).balance, 0.01 ether);
-        assertEq(address(3).balance, 0.99 ether);
+        bytes memory data = encoderDecoder.encodePayload("Hello");
+        uint256 amount = 1 ether;
+        uint256 fee = (amount * FEE) / 10_000;
+        uint256 netAmount = amount - fee;
+        streamFund.supportWithETH{ value: amount }(address(3), data);
+        assertEq(address(ADMIN).balance, fee);
+        assertEq(address(3).balance, netAmount);
     }
 
     function testGetFeeCollector() public view {
@@ -91,21 +97,6 @@ contract StreamFundTest is Test {
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Token not allowed"));
         vm.startPrank(address(2));
         streamFund.supportWithToken(address(3), address(token), 1, "Hello");
-    }
-
-    function testMessageLengthExceeded() public {
-        streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
-
-        vm.expectRevert(
-            abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Message length exceeded")
-        );
-        vm.startPrank(address(2));
-        streamFund.supportWithToken(
-            address(3),
-            address(usdt),
-            1,
-            "Hello, this is a very long message that exceeds the limit of 150 characters Hello, this is a very long message that exceeds the limit of 150 characterHello, this is a very long message that exceeds the"
-        );
     }
 
     function testInvalidChainID() public {
@@ -144,8 +135,19 @@ contract StreamFundTest is Test {
         vm.chainId(84_532);
         vm.startPrank(address(2));
         usdt.approve(address(streamFund), 100e6);
-        streamFund.supportWithToken(address(3), address(usdt), 100e6, "Hello");
-        assertEq(usdt.balanceOf(address(3)), 99e6);
-        assertEq(usdt.balanceOf(address(ADMIN)), 1e6);
+        bytes memory data = encoderDecoder.encodePayload("Hello");
+        uint256 amount = 100e6;
+        uint256 fee = (amount * FEE) / 10_000;
+        uint256 netAmount = amount - fee;
+
+        streamFund.supportWithToken(address(3), address(usdt), amount, data);
+        assertEq(usdt.balanceOf(address(3)), netAmount);
+        assertEq(usdt.balanceOf(address(ADMIN)), fee);
+    }
+
+    function initStreamFund() public {
+        vm.startPrank(ADMIN);
+        StreamFund sf = new StreamFund(ADMIN);
+        assertEq(sf.getFeeCollector(), ADMIN);
     }
 }
