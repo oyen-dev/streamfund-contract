@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.25 <0.9.0;
+pragma solidity >= 0.8.21 <0.9.0;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -15,7 +15,7 @@ contract Tokens is AccessControl {
     }
 
     uint256 private constant CHAIN_ID = 84_532;
-    mapping(address tokenAddress => AllowedToken token) public allowedTokens;
+    mapping(address tokenAddress => AllowedToken token) private allowedTokens;
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
     EnumerableMap.UintToAddressMap private tokens;
 
