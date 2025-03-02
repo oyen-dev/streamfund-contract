@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.25 <0.9.0;
+pragma solidity >= 0.8.22 <0.9.0;
 
 import { Test } from "forge-std/src/Test.sol";
 import { StreamFund } from "../src/StreamFund.sol";
@@ -24,7 +24,7 @@ contract StreamFundTest is Test {
     ERC20Mock usdt;
     ERC20Mock token;
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    uint256 public constant CHAIN_ID = 84_532;
+    uint256 public constant CHAIN_ID = 11_155_111;
     uint256 public constant FEE = 250; // 2.5%
     address private constant ADMIN = address(0x1);
 
@@ -52,7 +52,7 @@ contract StreamFundTest is Test {
     }
 
     function testSupportWithETH() public {
-        vm.chainId(84_532);
+        vm.chainId(11_155_111);
         vm.startPrank(address(2));
         vm.deal(address(2), 10 ether);
         bytes memory data = encoderDecoder.encodePayload("Hello");
@@ -117,7 +117,7 @@ contract StreamFundTest is Test {
         streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
         assertEq(streamFund.getAllowedToken(address(usdt)).symbol, "USDT");
 
-        vm.chainId(84_532);
+        vm.chainId(11_155_111);
         vm.startPrank(address(2));
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Insufficient allowance"));
         streamFund.supportWithToken(address(3), address(usdt), 1, "Hello");
@@ -132,7 +132,7 @@ contract StreamFundTest is Test {
         streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
         assertEq(streamFund.getAllowedToken(address(usdt)).symbol, "USDT");
 
-        vm.chainId(84_532);
+        vm.chainId(11_155_111);
         vm.startPrank(address(2));
         usdt.approve(address(streamFund), 100e6);
         bytes memory data = encoderDecoder.encodePayload("Hello");

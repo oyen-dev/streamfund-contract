@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.25 <0.9.0;
+pragma solidity >= 0.8.22 <0.9.0;
 
 import { Tokens } from "./Tokens.sol";
 import { Streamers } from "./Streamers.sol";
@@ -13,7 +13,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     using SafeERC20 for IERC20;
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
-    uint256 private constant CHAIN_ID = 84_532;
+    uint256 private constant CHAIN_ID = 11_155_111;
     uint256 private constant FEES = 250; // 2.5%
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address private feeCollector;
@@ -29,7 +29,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     event SupportReceived(
         address indexed streamer, address indexed from, address indexed token, uint256 amount, uint256 chain, bytes data
     );
-    event FeeCollectorChanged(address indexed newCollector);
+    event FeeCollectorChanged(address indexed newCollector, uint256 chain);
 
     function supportWithETH(address streamer, bytes memory data) external payable {
         if (msg.value == 0) {
@@ -80,6 +80,6 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     function setFeeCollector(address newCollector) external onlyRole(DEFAULT_ADMIN_ROLE) {
         feeCollector = newCollector;
 
-        emit FeeCollectorChanged(newCollector);
+        emit FeeCollectorChanged(newCollector, CHAIN_ID);
     }
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.25 <0.9.0;
+pragma solidity >= 0.8.22 <0.9.0;
 
 import { Test } from "forge-std/src/Test.sol";
 import { Streamers } from "../src/Streamers.sol";

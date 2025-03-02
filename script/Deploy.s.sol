@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.25 <0.9.0;
+pragma solidity >= 0.8.22 <0.9.0;
 
 import { Script } from "forge-std/src/Script.sol";
 import { StreamFund } from "../src/StreamFund.sol";
