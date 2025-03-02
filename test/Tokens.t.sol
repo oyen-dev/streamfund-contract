@@ -69,7 +69,7 @@ contract TokensTest is Test {
         string memory name = "Tether USD";
         emit Tokens.TokenAdded(address(1), decimals, CHAIN_ID, symbol, name);
         tokens.addAllowedToken(address(1), decimals, symbol, name);
-        emit Tokens.TokenRemoved(address(1));
+        emit Tokens.TokenRemoved(address(1), CHAIN_ID);
         tokens.removeAllowedToken(address(1));
     }
 
@@ -84,7 +84,7 @@ contract TokensTest is Test {
         emit Tokens.TokenAdded(address(3), 6, CHAIN_ID, "DAI", "Dai Stablecoin");
         tokens.addAllowedToken(address(3), 6, "DAI", "Dai Stablecoin");
 
-        emit Tokens.TokenRemoved(address(2));
+        emit Tokens.TokenRemoved(address(2), CHAIN_ID);
         tokens.removeAllowedToken(address(2));
 
         Tokens.AllowedToken memory token1 = tokens.getAllowedToken(address(1));

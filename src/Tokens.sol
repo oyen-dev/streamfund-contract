@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >= 0.8.21 <0.9.0;
+pragma solidity >= 0.8.25 <0.9.0;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -27,7 +27,7 @@ contract Tokens is AccessControl {
     error TokenValidationError(string message);
 
     event TokenAdded(address indexed tokenAddress, uint8 decimals, uint256 chain, string symbol, string name);
-    event TokenRemoved(address indexed tokenAddress);
+    event TokenRemoved(address indexed tokenAddress, uint256 chain);
 
     /**
      * @dev Add a new token to the allowed tokens list.
@@ -80,7 +80,7 @@ contract Tokens is AccessControl {
         delete allowedTokens[tokenAddress];
         tokens.remove(index);
 
-        emit TokenRemoved(tokenAddress);
+        emit TokenRemoved(tokenAddress, CHAIN_ID);
     }
 
     /**
