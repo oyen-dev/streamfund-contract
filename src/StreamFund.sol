@@ -13,7 +13,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     using SafeERC20 for IERC20;
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
-    uint256 private constant CHAIN_ID = 11_155_111;
+    uint256 private constant CHAIN_ID = 421_614;
     uint256 private constant FEES = 250; // 2.5%
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address private feeCollector;
@@ -27,7 +27,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     error StreamFundValidationError(string message);
 
     event SupportReceived(
-        address indexed streamer, address indexed from, address indexed token, uint256 amount, uint256 chain, bytes data
+        address indexed streamer, address indexed from, address indexed token, uint256 chain, uint256 amount, bytes data
     );
     event FeeCollectorChanged(address indexed newCollector, uint256 chain);
 
@@ -45,7 +45,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         SafeTransferLib.safeTransferETH(streamer, amount);
 
         _addTokenSupport(streamer, ETH, amount);
-        emit SupportReceived(streamer, msg.sender, ETH, msg.value, CHAIN_ID, data);
+        emit SupportReceived(streamer, msg.sender, ETH, CHAIN_ID, msg.value, data);
     }
 
     function supportWithToken(address streamer, address token, uint256 amount, bytes memory data) external {
@@ -70,7 +70,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
         IERC20(token).safeTransferFrom(msg.sender, streamer, netAmount);
         _addTokenSupport(streamer, token, netAmount);
 
-        emit SupportReceived(streamer, msg.sender, token, amount, CHAIN_ID, data);
+        emit SupportReceived(streamer, msg.sender, token, CHAIN_ID, amount, data);
     }
 
     function getFeeCollector() external view returns (address) {

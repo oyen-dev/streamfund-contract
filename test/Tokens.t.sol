@@ -7,7 +7,7 @@ import { Tokens } from "../src/Tokens.sol";
 
 contract TokensTest is Test {
     Tokens private tokens;
-    uint256 private constant CHAIN_ID = 11_155_111;
+    uint256 private constant CHAIN_ID = 421_614;
 
     function setUp() public {
         tokens = new Tokens();
@@ -15,41 +15,29 @@ contract TokensTest is Test {
 
     function testAddAllowedTokenZeroAddress() public {
         vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token address cannot be zero"));
-        tokens.addAllowedToken(address(0), 6, "USDT", "Tether USD");
+        bytes memory data = abi.encode("USDT");
+        tokens.addAllowedToken(address(0), 6, data);
     }
 
     function testAddAllowedTokenZeroDecimals() public {
         vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token decimals cannot be zero"));
-        tokens.addAllowedToken(address(1), 0, "USDT", "Tether USD");
-    }
-
-    function testAddAllowedTokenEmptySymbol() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token symbol or name cannot be empty")
-        );
-        tokens.addAllowedToken(address(1), 6, "", "Tether USD");
-    }
-
-    function testAddAllowedTokenEmptyName() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token symbol or name cannot be empty")
-        );
-        tokens.addAllowedToken(address(1), 6, "USDT", "");
+        bytes memory data = abi.encode("USDT");
+        tokens.addAllowedToken(address(1), 0, data);
     }
 
     function testAddAllowedTokenAlreadyExists() public {
-        tokens.addAllowedToken(address(1), 6, "USDT", "Tether USD");
+        bytes memory data = abi.encode("USDT");
+        tokens.addAllowedToken(address(1), 6, data);
         vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token already exists"));
-        tokens.addAllowedToken(address(1), 6, "USDT", "Tether USD");
+        tokens.addAllowedToken(address(1), 6, data);
     }
 
     function testAddAllowedToken() public {
         vm.expectEmit();
         uint8 decimals = 6;
-        string memory symbol = "USDT";
-        string memory name = "Tether USD";
-        emit Tokens.TokenAdded(address(1), decimals, CHAIN_ID, symbol, name);
-        tokens.addAllowedToken(address(1), decimals, symbol, name);
+        bytes memory data = abi.encode("USDT");
+        emit Tokens.TokenAdded(address(1), CHAIN_ID, decimals, data);
+        tokens.addAllowedToken(address(1), decimals, data);
     }
 
     function testRemoveAllowedTokenZeroAddress() public {
@@ -65,59 +53,48 @@ contract TokensTest is Test {
     function testRemoveAllowedToken() public {
         vm.expectEmit();
         uint8 decimals = 6;
-        string memory symbol = "USDT";
-        string memory name = "Tether USD";
-        emit Tokens.TokenAdded(address(1), decimals, CHAIN_ID, symbol, name);
-        tokens.addAllowedToken(address(1), decimals, symbol, name);
+        bytes memory data = abi.encode("USDT");
+        emit Tokens.TokenAdded(address(1), CHAIN_ID, decimals, data);
+        tokens.addAllowedToken(address(1), decimals, data);
         emit Tokens.TokenRemoved(address(1), CHAIN_ID);
         tokens.removeAllowedToken(address(1));
     }
 
     function testRemoveAllowedTokens() public {
         vm.expectEmit();
-        emit Tokens.TokenAdded(address(1), 6, CHAIN_ID, "USDT", "Tether USD");
-        tokens.addAllowedToken(address(1), 6, "USDT", "Tether USD");
+        bytes memory data = abi.encode("USDT");
+        emit Tokens.TokenAdded(address(1), CHAIN_ID, 6, data);
+        tokens.addAllowedToken(address(1), 6, data);
 
-        emit Tokens.TokenAdded(address(2), 6, CHAIN_ID, "USDC", "USD Coin");
-        tokens.addAllowedToken(address(2), 6, "USDC", "USD Coin");
+        emit Tokens.TokenAdded(address(2), CHAIN_ID, 6, data);
+        tokens.addAllowedToken(address(2), 6, data);
 
-        emit Tokens.TokenAdded(address(3), 6, CHAIN_ID, "DAI", "Dai Stablecoin");
-        tokens.addAllowedToken(address(3), 6, "DAI", "Dai Stablecoin");
+        emit Tokens.TokenAdded(address(3), CHAIN_ID, 6, data);
+        tokens.addAllowedToken(address(3), 6, data);
 
         emit Tokens.TokenRemoved(address(2), CHAIN_ID);
         tokens.removeAllowedToken(address(2));
 
-        Tokens.AllowedToken memory token1 = tokens.getAllowedToken(address(1));
-        assertEq(token1.decimals, 6);
-        assertEq(token1.symbol, "USDT");
-        assertEq(token1.name, "Tether USD");
+        uint8 token1 = tokens.getAllowedToken(address(1));
+        assertEq(token1, 6);
 
-        Tokens.AllowedToken memory token2 = tokens.getAllowedToken(address(2));
-        assertEq(token2.decimals, 0);
-        assertEq(token2.symbol, "");
-        assertEq(token2.name, "");
+        uint8 token2 = tokens.getAllowedToken(address(2));
+        assertEq(token2, 0);
 
-        Tokens.AllowedToken memory token3 = tokens.getAllowedToken(address(3));
-        assertEq(token3.decimals, 6);
-        assertEq(token3.symbol, "DAI");
-        assertEq(token3.name, "Dai Stablecoin");
+        uint8 token3 = tokens.getAllowedToken(address(3));
+        assertEq(token3, 6);
     }
 
     function testGetAllowedTokenZeroAddress() public view {
-        Tokens.AllowedToken memory token = tokens.getAllowedToken(address(0));
-        assertEq(token.decimals, 0);
-        assertEq(token.symbol, "");
-        assertEq(token.name, "");
+        uint8 token = tokens.getAllowedToken(address(0));
+        assertEq(token, 0);
     }
 
     function testGetAllowedTokenExist() public {
         uint8 decimals = 6;
-        string memory symbol = "USDT";
-        string memory name = "Tether USD";
-        tokens.addAllowedToken(address(1), decimals, symbol, name);
-        Tokens.AllowedToken memory token = tokens.getAllowedToken(address(1));
-        assertEq(token.decimals, decimals);
-        assertEq(token.symbol, symbol);
-        assertEq(token.name, name);
+        bytes memory data = abi.encode("USDT");
+        tokens.addAllowedToken(address(1), decimals, data);
+        uint8 token = tokens.getAllowedToken(address(1));
+        assertEq(token, decimals);
     }
 }

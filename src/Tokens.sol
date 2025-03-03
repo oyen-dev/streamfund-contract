@@ -8,14 +8,8 @@ import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableM
 contract Tokens is AccessControl {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
 
-    struct AllowedToken {
-        uint8 decimals;
-        string symbol;
-        string name;
-    }
-
-    uint256 private constant CHAIN_ID = 11_155_111;
-    mapping(address tokenAddress => AllowedToken token) private allowedTokens;
+    uint256 private constant CHAIN_ID = 421_614;
+    mapping(address tokenAddress => uint8 decimals) private allowedTokens;
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
     EnumerableMap.UintToAddressMap private tokens;
 
@@ -26,7 +20,7 @@ contract Tokens is AccessControl {
 
     error TokenValidationError(string message);
 
-    event TokenAdded(address indexed tokenAddress, uint8 decimals, uint256 chain, string symbol, string name);
+    event TokenAdded(address indexed tokenAddress, uint256 chain, uint8 decimals, bytes data);
     event TokenRemoved(address indexed tokenAddress, uint256 chain);
 
     /**
@@ -36,35 +30,24 @@ contract Tokens is AccessControl {
      * Also reverts if the token already exists in the list.
      * @param tokenAddress of the token
      * @param decimals of the token
-     * @param symbol of the token
-     * @param name of the token
+     * @param data additional data for the token
      */
-    function addAllowedToken(
-        address tokenAddress,
-        uint8 decimals,
-        string memory symbol,
-        string memory name
-    )
-        external
-        onlyRole(EDITOR_ROLE)
-    {
+    function addAllowedToken(address tokenAddress, uint8 decimals, bytes memory data) external onlyRole(EDITOR_ROLE) {
         if (tokenAddress == address(0)) {
             revert TokenValidationError("Token address cannot be zero");
         }
         if (decimals == 0) {
             revert TokenValidationError("Token decimals cannot be zero");
         }
-        if (bytes(symbol).length == 0 || bytes(name).length == 0) {
-            revert TokenValidationError("Token symbol or name cannot be empty");
-        }
+
         if (_isTokenAvailable(tokenAddress)) {
             revert TokenValidationError("Token already exists");
         }
 
-        allowedTokens[tokenAddress] = AllowedToken(decimals, symbol, name);
+        allowedTokens[tokenAddress] = decimals;
         tokens.set(tokens.length(), tokenAddress);
 
-        emit TokenAdded(tokenAddress, decimals, CHAIN_ID, symbol, name);
+        emit TokenAdded(tokenAddress, CHAIN_ID, decimals, data);
     }
 
     /**
@@ -86,9 +69,9 @@ contract Tokens is AccessControl {
     /**
      * @notice Retrieves the details of an allowed token.
      * @param tokenAddress The address of the token to retrieve.
-     * @return AllowedToken The details of the allowed token.
+     * @return decimals The number of decimals of the token.
      */
-    function getAllowedToken(address tokenAddress) external view returns (AllowedToken memory) {
+    function getAllowedToken(address tokenAddress) external view returns (uint8 decimals) {
         return allowedTokens[tokenAddress];
     }
 
@@ -98,7 +81,7 @@ contract Tokens is AccessControl {
      * @return bool Returns true if the token is available, false otherwise.
      */
     function _isTokenAvailable(address tokenAddress) internal view returns (bool) {
-        return allowedTokens[tokenAddress].decimals != 0;
+        return allowedTokens[tokenAddress] != 0;
     }
 
     /**

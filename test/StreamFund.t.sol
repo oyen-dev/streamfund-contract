@@ -24,7 +24,7 @@ contract StreamFundTest is Test {
     ERC20Mock usdt;
     ERC20Mock token;
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    uint256 public constant CHAIN_ID = 11_155_111;
+    uint256 public constant CHAIN_ID = 421_614;
     uint256 public constant FEE = 250; // 2.5%
     address private constant ADMIN = address(0x1);
 
@@ -52,7 +52,7 @@ contract StreamFundTest is Test {
     }
 
     function testSupportWithETH() public {
-        vm.chainId(11_155_111);
+        vm.chainId(421_614);
         vm.startPrank(address(2));
         vm.deal(address(2), 10 ether);
         bytes memory data = encoderDecoder.encodePayload("Hello");
@@ -92,7 +92,8 @@ contract StreamFundTest is Test {
     }
 
     function testTokenNotAllowed() public {
-        streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
+        bytes memory data = abi.encode("USDT");
+        streamFund.addAllowedToken(address(usdt), 6, data);
 
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Token not allowed"));
         vm.startPrank(address(2));
@@ -100,7 +101,8 @@ contract StreamFundTest is Test {
     }
 
     function testInvalidChainID() public {
-        streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
+        bytes memory data = abi.encode("USDT");
+        streamFund.addAllowedToken(address(usdt), 6, data);
 
         vm.chainId(1);
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Invalid chain ID"));
@@ -114,10 +116,11 @@ contract StreamFundTest is Test {
         usdt.mintTo(address(this), 100e6);
         vm.stopPrank();
 
-        streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
-        assertEq(streamFund.getAllowedToken(address(usdt)).symbol, "USDT");
+        bytes memory data = abi.encode("USDT");
+        streamFund.addAllowedToken(address(usdt), 6, data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), 6);
 
-        vm.chainId(11_155_111);
+        vm.chainId(421_614);
         vm.startPrank(address(2));
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Insufficient allowance"));
         streamFund.supportWithToken(address(3), address(usdt), 1, "Hello");
@@ -129,13 +132,14 @@ contract StreamFundTest is Test {
         usdt.mintTo(address(this), 100e6);
         vm.stopPrank();
 
-        streamFund.addAllowedToken(address(usdt), 6, "USDT", "Tether USD");
-        assertEq(streamFund.getAllowedToken(address(usdt)).symbol, "USDT");
+        bytes memory data = abi.encode("USDT");
+        streamFund.addAllowedToken(address(usdt), 6, data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), 6);
 
-        vm.chainId(11_155_111);
+        vm.chainId(421_614);
         vm.startPrank(address(2));
         usdt.approve(address(streamFund), 100e6);
-        bytes memory data = encoderDecoder.encodePayload("Hello");
+        data = encoderDecoder.encodePayload("Hello");
         uint256 amount = 100e6;
         uint256 fee = (amount * FEE) / 10_000;
         uint256 netAmount = amount - fee;
