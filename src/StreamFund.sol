@@ -6,6 +6,7 @@ import { Tokens } from "./Tokens.sol";
 import { Streamers } from "./Streamers.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { SafeTransferLib } from "lib/solady/src/utils/SafeTransferLib.sol";
 
@@ -29,7 +30,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     event SupportReceived(
         address indexed streamer, address indexed from, address indexed token, uint256 chain, uint256 amount, bytes data
     );
-    event FeeCollectorChanged(address indexed newCollector, uint256 chain);
+    event FeeCollectorChanged(address indexed prevCollector, address indexed newCollector, uint256 chain);
 
     function supportWithETH(address streamer, bytes memory data) external payable {
         if (msg.value == 0) {
@@ -78,8 +79,9 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     }
 
     function setFeeCollector(address newCollector) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        address prevFeeCollector = feeCollector;
         feeCollector = newCollector;
 
-        emit FeeCollectorChanged(newCollector, CHAIN_ID);
+        emit FeeCollectorChanged(prevFeeCollector, newCollector, CHAIN_ID);
     }
 }

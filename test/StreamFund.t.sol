@@ -93,7 +93,7 @@ contract StreamFundTest is Test {
 
     function testTokenNotAllowed() public {
         bytes memory data = abi.encode("USDT");
-        streamFund.addAllowedToken(address(usdt), 6, data);
+        streamFund.addAllowedToken(address(usdt), data);
 
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Token not allowed"));
         vm.startPrank(address(2));
@@ -102,7 +102,7 @@ contract StreamFundTest is Test {
 
     function testInvalidChainID() public {
         bytes memory data = abi.encode("USDT");
-        streamFund.addAllowedToken(address(usdt), 6, data);
+        streamFund.addAllowedToken(address(usdt), data);
 
         vm.chainId(1);
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Invalid chain ID"));
@@ -117,8 +117,8 @@ contract StreamFundTest is Test {
         vm.stopPrank();
 
         bytes memory data = abi.encode("USDT");
-        streamFund.addAllowedToken(address(usdt), 6, data);
-        assertEq(streamFund.getAllowedToken(address(usdt)), 6);
+        streamFund.addAllowedToken(address(usdt), data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), data);
 
         vm.chainId(421_614);
         vm.startPrank(address(2));
@@ -133,8 +133,8 @@ contract StreamFundTest is Test {
         vm.stopPrank();
 
         bytes memory data = abi.encode("USDT");
-        streamFund.addAllowedToken(address(usdt), 6, data);
-        assertEq(streamFund.getAllowedToken(address(usdt)), 6);
+        streamFund.addAllowedToken(address(usdt), data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), data);
 
         vm.chainId(421_614);
         vm.startPrank(address(2));
