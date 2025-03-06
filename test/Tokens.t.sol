@@ -5,7 +5,6 @@ pragma solidity >= 0.8.22 <0.9.0;
 import { Test } from "forge-std/src/Test.sol";
 import { Tokens } from "../src/Tokens.sol";
 import { ERC20Mock } from "../src/ERC20Mock.sol";
-import { console2 } from "forge-std/src/console2.sol";
 
 contract TokensTest is Test {
     uint256 private constant CHAIN_ID = 421_614;
@@ -28,28 +27,32 @@ contract TokensTest is Test {
 
     function testAddAllowedTokenAlreadyExists() public {
         uint8 usdtDecimals = usdt.decimals();
-        address usdtAddress = address(usdt);
         string memory usdtSymbol = usdt.symbol();
-        string memory usdtCoinGecko = "tether";
-        string memory usdtLogo = "https://assets.coingecko.com/coins/images/325/large/tether.png";
-        bytes memory data = abi.encode(usdtAddress, usdtSymbol, usdtDecimals, usdtCoinGecko, usdtLogo);
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
+        emit Tokens.TokenAdded(address(usdt), CHAIN_ID, usdtDecimals, emitData);
+        tokens.addAllowedToken(address(usdt), data);
 
-        tokens.addAllowedToken(usdtAddress, data);
         vm.expectRevert(abi.encodeWithSelector(Tokens.TokenValidationError.selector, "Token already exists"));
-        tokens.addAllowedToken(usdtAddress, data);
+        tokens.addAllowedToken(address(usdt), data);
     }
 
     function testAddAllowedToken() public {
         vm.expectEmit();
         uint8 usdtDecimals = usdt.decimals();
-        address usdtAddress = address(usdt);
         string memory usdtSymbol = usdt.symbol();
-        string memory usdtCoinGecko = "tether";
-        string memory usdtLogo = "https://assets.coingecko.com/coins/images/325/large/tether.png";
-        bytes memory data = abi.encode(usdtAddress, usdtSymbol, usdtDecimals, usdtCoinGecko, usdtLogo);
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
 
-        emit Tokens.TokenAdded(usdtAddress, CHAIN_ID, usdtDecimals, data);
-        tokens.addAllowedToken(usdtAddress, data);
+        emit Tokens.TokenAdded(address(usdt), CHAIN_ID, usdtDecimals, emitData);
+        tokens.addAllowedToken(address(usdt), data);
+
+        bytes memory token = tokens.getAllowedToken(address(usdt));
+        assertEq(token, emitData, "USDT data should be the same");
     }
 
     function testRemoveAllowedTokenZeroAddress() public {
@@ -65,61 +68,76 @@ contract TokensTest is Test {
     function testRemoveAllowedToken() public {
         vm.expectEmit();
         uint8 usdtDecimals = usdt.decimals();
-        address usdtAddress = address(usdt);
         string memory usdtSymbol = usdt.symbol();
-        string memory usdtCoinGecko = "tether";
-        string memory usdtLogo = "https://assets.coingecko.com/coins/images/325/large/tether.png";
-        bytes memory data = abi.encode(usdtAddress, usdtSymbol, usdtDecimals, usdtCoinGecko, usdtLogo);
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
 
-        emit Tokens.TokenAdded(usdtAddress, CHAIN_ID, usdtDecimals, data);
-        tokens.addAllowedToken(usdtAddress, data);
-        emit Tokens.TokenRemoved(usdtAddress, CHAIN_ID);
-        tokens.removeAllowedToken(usdtAddress);
+        emit Tokens.TokenAdded(address(usdt), CHAIN_ID, usdtDecimals, emitData);
+        tokens.addAllowedToken(address(usdt), data);
+        emit Tokens.TokenRemoved(address(usdt), CHAIN_ID);
+        tokens.removeAllowedToken(address(usdt));
+
+        bytes memory token = tokens.getAllowedToken(address(usdt));
+        assertEq(token, "", "USDT data should be empty");
     }
 
-    // function testRemoveAllowedTokens() public {
-    //     vm.expectEmit();
-    //     uint8 usdtDecimals = usdt.decimals();
-    //     address usdtAddress = address(usdt);
-    //     string memory usdtSymbol = usdt.symbol();
-    //     string memory usdtCoinGecko = "tether";
-    //     string memory usdtLogo = "https://assets.coingecko.com/coins/images/325/large/tether.png";
-    //     bytes memory usdtData = abi.encode(usdtAddress, usdtSymbol, usdtDecimals, usdtCoinGecko, usdtLogo);
+    function testRemoveAllowedTokens() public {
+        vm.expectEmit();
+        uint8 usdtDecimals = usdt.decimals();
+        string memory usdtSymbol = usdt.symbol();
+        string memory usdtName = usdt.name();
+        string memory usdtParams = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory usdtData = abi.encode(usdtParams);
+        bytes memory usdtEmitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, usdtParams);
 
-    //     uint8 usdcDecimals = usdc.decimals();
-    //     address usdcAddress = address(usdc);
-    //     string memory usdcSymbol = usdc.symbol();
-    //     string memory usdcCoinGecko = "usd-coin";
-    //     string memory usdcLogo = "https://assets.coingecko.com/coins/images/325/large/usd-coin.png";
-    //     bytes memory usdcData = abi.encode(usdcAddress, usdcSymbol, usdcDecimals, usdcCoinGecko, usdcLogo);
+        uint8 usdcDecimals = usdt.decimals();
+        string memory usdcSymbol = usdt.symbol();
+        string memory usdcName = usdt.name();
+        string memory usdcParams = "tether,https://assets.coingecko.com/coins/images/325/large/usd-coin.png";
+        bytes memory usdcData = abi.encode(usdcParams);
+        bytes memory usdcEmitData = abi.encode(address(usdt), usdcName, usdcSymbol, usdtDecimals, usdcParams);
 
-    //     emit Tokens.TokenAdded(usdtAddress, CHAIN_ID, usdtDecimals, usdtData);
-    //     tokens.addAllowedToken(usdtAddress, usdtData);
+        emit Tokens.TokenAdded(address(usdt), CHAIN_ID, usdtDecimals, usdtEmitData);
+        tokens.addAllowedToken(address(usdt), usdtData);
 
-    //     emit Tokens.TokenAdded(usdcAddress, CHAIN_ID, usdcDecimals, usdcData);
-    //     tokens.addAllowedToken(usdcAddress, usdcData);
+        emit Tokens.TokenAdded(address(usdc), CHAIN_ID, usdcDecimals, usdcEmitData);
+        tokens.addAllowedToken(address(usdc), usdcData);
 
-    //     emit Tokens.TokenRemoved(usdcAddress, CHAIN_ID);
-    //     tokens.removeAllowedToken(usdcAddress);
+        emit Tokens.TokenRemoved(address(usdc), CHAIN_ID);
+        tokens.removeAllowedToken(address(usdc));
 
-    //     bytes memory usdtD = tokens.getAllowedToken(address(1));
-    //     console2.logBytes(usdtData);
-    //     console2.logBytes(usdtD);
-    //     assertEq(usdtD, usdtData);
+        bytes memory usdtD = tokens.getAllowedToken(address(usdt));
+        assertEq(usdtD, usdtEmitData, "USDT data should be the same");
 
-    //     bytes memory usdcD = tokens.getAllowedToken(address(2));
-    //     assertEq(usdcD, "0x");
-    // }
+        bytes memory usdcD = tokens.getAllowedToken(address(usdc));
+        assertEq(usdcD, "", "USDC data should be empty");
+    }
 
     function testGetAllowedTokenZeroAddress() public view {
         bytes memory token = tokens.getAllowedToken(address(0));
-        assertEq(token, "");
+        assertEq(token, "", "Token data should be empty");
     }
 
-    // function testGetAllowedTokenExist() public {
-    //     bytes memory data = abi.encode("USDT");
-    //     tokens.addAllowedToken(address(1), data);
-    //     bytes memory token = tokens.getAllowedToken(address(1));
-    //     assertEq(token, data);
-    // }
+    function testGetAllowedTokenDoesNotExist() public view {
+        bytes memory token = tokens.getAllowedToken(address(1));
+        assertEq(token, "", "Token data should be empty");
+    }
+
+    function testGetAllowedTokenExist() public {
+        vm.expectEmit();
+        uint8 usdtDecimals = usdt.decimals();
+        string memory usdtSymbol = usdt.symbol();
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
+
+        emit Tokens.TokenAdded(address(usdt), CHAIN_ID, usdtDecimals, emitData);
+        tokens.addAllowedToken(address(usdt), data);
+
+        bytes memory token = tokens.getAllowedToken(address(usdt));
+        assertEq(token, emitData, "USDT data should be the same");
+    }
 }

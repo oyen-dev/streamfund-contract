@@ -19,10 +19,10 @@ contract EncoderDecoder {
 }
 
 contract StreamFundTest is Test {
-    EncoderDecoder encoderDecoder;
-    StreamFund streamFund;
-    ERC20Mock usdt;
-    ERC20Mock token;
+    EncoderDecoder private encoderDecoder;
+    StreamFund private streamFund;
+    ERC20Mock private usdt;
+    ERC20Mock private token;
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
     uint256 public constant CHAIN_ID = 421_614;
     uint256 public constant FEE = 250; // 2.5%
@@ -60,8 +60,8 @@ contract StreamFundTest is Test {
         uint256 fee = (amount * FEE) / 10_000;
         uint256 netAmount = amount - fee;
         streamFund.supportWithETH{ value: amount }(address(3), data);
-        assertEq(address(ADMIN).balance, fee);
-        assertEq(address(3).balance, netAmount);
+        assertEq(address(ADMIN).balance, fee, "Fee should be sent to the fee collector");
+        assertEq(address(3).balance, netAmount, "Net amount should be sent to the streamer");
     }
 
     function testGetFeeCollector() public view {
@@ -80,7 +80,7 @@ contract StreamFundTest is Test {
 
     function testChangeFeeCollector() public {
         streamFund.setFeeCollector(address(2));
-        assertEq(streamFund.getFeeCollector(), address(2));
+        assertEq(streamFund.getFeeCollector(), address(2), "Fee collector should be updated");
     }
 
     function testTokenAmountZero() public {
@@ -116,9 +116,14 @@ contract StreamFundTest is Test {
         usdt.mintTo(address(this), 100e6);
         vm.stopPrank();
 
-        bytes memory data = abi.encode("USDT");
+        uint8 usdtDecimals = usdt.decimals();
+        string memory usdtSymbol = usdt.symbol();
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
         streamFund.addAllowedToken(address(usdt), data);
-        assertEq(streamFund.getAllowedToken(address(usdt)), data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), emitData, "USDT data should be the same");
 
         vm.chainId(421_614);
         vm.startPrank(address(2));
@@ -132,9 +137,14 @@ contract StreamFundTest is Test {
         usdt.mintTo(address(this), 100e6);
         vm.stopPrank();
 
-        bytes memory data = abi.encode("USDT");
+        uint8 usdtDecimals = usdt.decimals();
+        string memory usdtSymbol = usdt.symbol();
+        string memory usdtName = usdt.name();
+        string memory params = "tether,https://assets.coingecko.com/coins/images/325/large/tether.png";
+        bytes memory data = abi.encode(params);
+        bytes memory emitData = abi.encode(address(usdt), usdtName, usdtSymbol, usdtDecimals, params);
         streamFund.addAllowedToken(address(usdt), data);
-        assertEq(streamFund.getAllowedToken(address(usdt)), data);
+        assertEq(streamFund.getAllowedToken(address(usdt)), emitData, "USDT data should be the same");
 
         vm.chainId(421_614);
         vm.startPrank(address(2));
@@ -145,13 +155,13 @@ contract StreamFundTest is Test {
         uint256 netAmount = amount - fee;
 
         streamFund.supportWithToken(address(3), address(usdt), amount, data);
-        assertEq(usdt.balanceOf(address(3)), netAmount);
-        assertEq(usdt.balanceOf(address(ADMIN)), fee);
+        assertEq(usdt.balanceOf(address(3)), netAmount, "Net amount should be sent to the streamer");
+        assertEq(usdt.balanceOf(address(ADMIN)), fee, "Fee should be sent to the fee collector");
     }
 
     function initStreamFund() public {
         vm.startPrank(ADMIN);
         StreamFund sf = new StreamFund(ADMIN);
-        assertEq(sf.getFeeCollector(), ADMIN);
+        assertEq(sf.getFeeCollector(), ADMIN, "Fee collector should be the admin");
     }
 }

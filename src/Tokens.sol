@@ -41,6 +41,12 @@ contract Tokens is AccessControl {
         }
 
         uint8 decimals = IERC20Metadata(tokenAddress).decimals();
+        string memory symbol = IERC20Metadata(tokenAddress).symbol();
+        string memory name = IERC20Metadata(tokenAddress).name();
+        (string memory params) = abi.decode(data, (string));
+
+        data = abi.encode(tokenAddress, name, symbol, decimals, params);
+
         allowedTokens[tokenAddress] = data;
         tokens.set(tokens.length(), tokenAddress);
 

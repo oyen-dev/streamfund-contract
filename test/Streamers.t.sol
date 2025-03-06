@@ -20,8 +20,8 @@ contract InnerStreamerTest is Streamers {
 }
 
 contract StreamersTest is Test {
-    Streamers streamers;
-    InnerStreamerTest innerStreamer;
+    Streamers private streamers;
+    InnerStreamerTest private innerStreamer;
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     function setUp() public {
@@ -31,26 +31,26 @@ contract StreamersTest is Test {
 
     function testGetInvalidStreamer() public view {
         (address streamer, uint256 amount) = streamers.getStreamerSupport(address(this), ETH);
-        assertEq(streamer, address(0));
-        assertEq(amount, 0);
+        assertEq(streamer, address(0), "Streamer should be zero address");
+        assertEq(amount, 0, "Amount should be zero");
     }
 
     function testGetStreamerWithSupport() public {
         innerStreamer.support(address(this), ETH, 100);
         (address streamer, uint256 amount) = innerStreamer.getStreamer(address(this), ETH);
-        assertEq(streamer, address(this));
-        assertEq(amount, 100);
+        assertEq(streamer, address(this), "Streamer should be this address");
+        assertEq(amount, 100, "Amount should be 100");
     }
 
     function testGetStreamerCount() public {
-        assertEq(innerStreamer.getTotalStreamer(), 0);
+        assertEq(innerStreamer.getTotalStreamer(), 0, "Total streamer should be zero");
         innerStreamer.support(address(this), ETH, 100);
-        assertEq(innerStreamer.getTotalStreamer(), 1);
+        assertEq(innerStreamer.getTotalStreamer(), 1, "Total streamer should be one");
 
         innerStreamer.support(address(1), ETH, 100);
-        assertEq(innerStreamer.getTotalStreamer(), 2);
+        assertEq(innerStreamer.getTotalStreamer(), 2, "Total streamer should be two");
 
         innerStreamer.support(address(2), ETH, 100);
-        assertEq(innerStreamer.getTotalStreamer(), 3);
+        assertEq(innerStreamer.getTotalStreamer(), 3, "Total streamer should be three");
     }
 }
