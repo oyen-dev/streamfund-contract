@@ -6,6 +6,12 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+interface ITokens {
+    function addAllowedToken(address tokenAddress, bytes memory data) external;
+    function removeAllowedToken(address tokenAddress) external;
+    function getAllowedToken(address tokenAddress) external view returns (bytes memory);
+}
+
 contract Tokens is AccessControl {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
 

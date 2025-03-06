@@ -9,6 +9,19 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { SafeTransferLib } from "lib/solady/src/utils/SafeTransferLib.sol";
 
+interface IStreamFund {
+    function DEFAULT_ADMIN_ROLE() external view returns (bytes32);
+    function supportWithETH(address streamer, bytes memory data) external payable;
+    function supportWithToken(address streamer, address token, uint256 amount, bytes memory data) external;
+    function getFeeCollector() external view returns (address);
+    function setFeeCollector(address newCollector) external;
+    function addAllowedToken(address tokenAddress, bytes memory data) external;
+    function removeAllowedToken(address tokenAddress) external;
+    function getAllowedToken(address tokenAddress) external view returns (bytes memory);
+    function getStreamerSupport(address streamer, address token) external view returns (address, uint256);
+    function getStreamerCount() external view returns (uint256);
+}
+
 contract StreamFund is AccessControl, Tokens, Streamers {
     using SafeERC20 for IERC20;
 

@@ -4,6 +4,11 @@ pragma solidity >= 0.8.22 <0.9.0;
 
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
+interface IStreamers {
+    function getStreamerSupport(address streamer, address token) external view returns (address, uint256);
+    function getStreamerCount() external view returns (uint256);
+}
+
 contract Streamers {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 

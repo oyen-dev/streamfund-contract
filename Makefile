@@ -10,6 +10,20 @@ echo:
 
 .PHONY: deploy
 
+addAllowedToken:
+	forge script \
+		--rpc-url $(RPC_URL) \
+		--private-key $(PRIVATE_KEY) \
+		--broadcast \
+		script/AddAllowedToken.s.sol:AddAllowedToken 
+
+removeAllowedToken:
+	forge script \
+		--rpc-url $(RPC_URL) \
+		--private-key $(PRIVATE_KEY) \
+		--broadcast \
+		script/RemoveAllowedToken.s.sol:RemoveAllowedToken
+
 deploy:
 	forge create \
 		--rpc-url $(RPC_URL) \
@@ -22,3 +36,4 @@ deploy:
 # Usage:
 # source .env
 # make deploy
+# make addAllowedToken
