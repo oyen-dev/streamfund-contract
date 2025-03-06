@@ -24,6 +24,13 @@ removeAllowedToken:
 		--broadcast \
 		script/RemoveAllowedToken.s.sol:RemoveAllowedToken
 
+changeFeeCollector:
+	forge script \
+		--rpc-url $(RPC_URL) \
+		--private-key $(PRIVATE_KEY) \
+		--broadcast \
+		script/ChangeFeeCollector.s.sol:ChangeFeeCollector
+
 deploy:
 	forge create \
 		--rpc-url $(RPC_URL) \
