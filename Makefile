@@ -32,6 +32,13 @@ supportWithToken:
 		--broadcast \
 		script/SupportWithToken.s.sol:SupportWithToken
 
+supportWithETH:
+	forge script \
+		--rpc-url $(RPC_URL) \
+		--private-key $(VIEWER_PK) \
+		--broadcast \
+		script/SupportWithETH.s.sol:SupportWithETH
+
 deploySF:
 	forge create \
 		--rpc-url $(RPC_URL) \
