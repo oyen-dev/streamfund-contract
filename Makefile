@@ -2,13 +2,7 @@
 
 CONTRACT_PATH=src/StreamFund.sol:StreamFund
 
-echo:
-	echo $(RPC_URL)
-	echo $(CONSTRUCTOR_ARGS)
-	echo $(ETHERSCAN_API_KEY)
-	echo $(CONTRACT_PATH)
-
-.PHONY: deploy
+.PHONY: deploySF changeFeeCollector addAllowedToken removeAllowedToken
 
 addAllowedToken:
 	forge script \
@@ -31,7 +25,14 @@ changeFeeCollector:
 		--broadcast \
 		script/ChangeFeeCollector.s.sol:ChangeFeeCollector
 
-deploy:
+supportWithToken:
+	forge script \
+		--rpc-url $(RPC_URL) \
+		--private-key $(VIEWER_PK) \
+		--broadcast \
+		script/SupportWithToken.s.sol:SupportWithToken
+
+deploySF:
 	forge create \
 		--rpc-url $(RPC_URL) \
 		--constructor-args $(CONSTRUCTOR_ARGS) \
@@ -39,8 +40,3 @@ deploy:
 		--verify \
 		--private-key $(PRIVATE_KEY) \
 		$(CONTRACT_PATH)
-
-# Usage:
-# source .env
-# make deploy
-# make addAllowedToken
