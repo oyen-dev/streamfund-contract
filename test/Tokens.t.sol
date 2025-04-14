@@ -7,7 +7,7 @@ import { Tokens } from "../src/Tokens.sol";
 import { ERC20Mock } from "../src/ERC20Mock.sol";
 
 contract TokensTest is Test {
-    uint256 private constant CHAIN_ID = 421_614;
+    uint256 private constant CHAIN_ID = 11_155_420;
     Tokens private tokens;
     ERC20Mock private usdt;
     ERC20Mock private usdc;

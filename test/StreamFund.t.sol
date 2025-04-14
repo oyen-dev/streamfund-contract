@@ -24,7 +24,7 @@ contract StreamFundTest is Test {
     ERC20Mock private usdt;
     ERC20Mock private token;
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    uint256 public constant CHAIN_ID = 421_614;
+    uint256 public constant CHAIN_ID = 11_155_420;
     uint256 public constant FEE = 250; // 2.5%
     address private constant ADMIN = address(0x1);
 
@@ -52,7 +52,7 @@ contract StreamFundTest is Test {
     }
 
     function testSupportWithETH() public {
-        vm.chainId(421_614);
+        vm.chainId(11_155_420);
         vm.startPrank(address(2));
         vm.deal(address(2), 10 ether);
         bytes memory data = encoderDecoder.encodePayload("Hello");
@@ -125,7 +125,7 @@ contract StreamFundTest is Test {
         streamFund.addAllowedToken(address(usdt), data);
         assertEq(streamFund.getAllowedToken(address(usdt)), emitData, "USDT data should be the same");
 
-        vm.chainId(421_614);
+        vm.chainId(11_155_420);
         vm.startPrank(address(2));
         vm.expectRevert(abi.encodeWithSelector(StreamFund.StreamFundValidationError.selector, "Insufficient allowance"));
         streamFund.supportWithToken(address(3), address(usdt), 1, "Hello");
@@ -146,7 +146,7 @@ contract StreamFundTest is Test {
         streamFund.addAllowedToken(address(usdt), data);
         assertEq(streamFund.getAllowedToken(address(usdt)), emitData, "USDT data should be the same");
 
-        vm.chainId(421_614);
+        vm.chainId(11_155_420);
         vm.startPrank(address(2));
         usdt.approve(address(streamFund), 100e6);
         data = encoderDecoder.encodePayload("Hello");

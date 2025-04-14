@@ -16,7 +16,7 @@ contract Tokens is AccessControl {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
-    uint256 private constant CHAIN_ID = 421_614;
+    uint256 private constant CHAIN_ID = 11_155_420;
     mapping(address tokenAddress => bytes info) private allowedTokens;
     EnumerableMap.UintToAddressMap private tokens;
 
