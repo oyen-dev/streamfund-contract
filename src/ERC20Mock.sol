@@ -34,6 +34,6 @@ contract ERC20Mock is ERC20, ERC20Burnable, AccessControl, ERC20Permit {
     }
 
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return 6;
     }
 }

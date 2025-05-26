@@ -2,7 +2,7 @@
 
 CONTRACT_PATH=src/StreamFund.sol:StreamFund
 
-.PHONY: deploySF changeFeeCollector addAllowedToken removeAllowedToken 
+.PHONY: deploySF changeFeeCollector addAllowedToken removeAllowedToken deployMockToken supportWithToken supportWithETH
 
 addAllowedToken:
 	forge script \
@@ -42,8 +42,10 @@ supportWithETH:
 deploySF:
 	forge create \
 		--rpc-url $(RPC_URL) \
-		--etherscan-api-key $(ETHERSCAN_API_KEY) \
 		--verify \
+		--verifier blockscout \
+		--verifier-url $(VERIFIER_URL) \
+		--broadcast \
 		--private-key $(PRIVATE_KEY) \
 		$(CONTRACT_PATH) \
 		--constructor-args $(CONSTRUCTOR_ARGS) 
@@ -51,9 +53,10 @@ deploySF:
 deployMockToken:
 	forge create \
 		--rpc-url $(RPC_URL) \
-		--etherscan-api-key $(ETHERSCAN_API_KEY) \
 		--verify \
+		--verifier blockscout \
+		--verifier-url $(VERIFIER_URL) \
+		--broadcast \
 		--private-key $(PRIVATE_KEY) \
-		--broadcast	\
 		src/ERC20Mock.sol:ERC20Mock \
 		--constructor-args $(CONSTRUCTOR_ARGS)

@@ -15,6 +15,7 @@ contract AddAllowedToken is Script {
         IERC20Metadata token = IERC20Metadata(vm.envAddress("TOKEN_ADDRESS"));
         string memory params = vm.envString("TOKEN_PARAMS");
         bytes memory data = abi.encode(params);
+        console2.logBytes(data);
         string memory tokenName = token.name();
 
         vm.startBroadcast(deployerPrivateKey);

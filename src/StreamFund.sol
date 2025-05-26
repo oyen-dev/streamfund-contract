@@ -26,7 +26,7 @@ contract StreamFund is AccessControl, Tokens, Streamers {
     using SafeERC20 for IERC20;
 
     bytes32 private constant EDITOR_ROLE = keccak256("EDITOR_ROLE");
-    uint256 private constant CHAIN_ID = 11_155_420;
+    uint256 private constant CHAIN_ID = 4202;
     uint256 private constant FEES = 250; // 2.5%
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address private feeCollector;
